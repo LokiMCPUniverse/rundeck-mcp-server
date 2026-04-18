@@ -16,25 +16,20 @@
 [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP](https://img.shields.io/badge/Model_Context_Protocol-DC143C?style=for-the-badge)](https://modelcontextprotocol.io)
 
-[![Commit Activity](https://img.shields.io/github/commit-activity/m/LokiMCPUniverse/rundeck-mcp-server?style=flat-square)](https://github.com/LokiMCPUniverse/rundeck-mcp-server/pulse)
-[![Code Size](https://img.shields.io/github/languages/code-size/LokiMCPUniverse/rundeck-mcp-server?style=flat-square)](https://github.com/LokiMCPUniverse/rundeck-mcp-server)
-[![Contributors](https://img.shields.io/github/contributors/LokiMCPUniverse/rundeck-mcp-server?style=flat-square)](https://github.com/LokiMCPUniverse/rundeck-mcp-server/graphs/contributors)
-
 </div>
 
-A Model Context Protocol (MCP) server for integrating Rundeck with GenAI applications.
-
-## Overview
-
-Runbook automation and job scheduling
+A Model Context Protocol (MCP) server for driving Rundeck from GenAI agents. Built on the
+official `mcp` Python SDK (>=1.27) with FastMCP, an async `httpx` client, and
+pydantic-settings for configuration.
 
 ## Features
 
-- Comprehensive Rundeck API coverage
-- Multiple authentication methods
-- Enterprise-ready with rate limiting
-- Full error handling and retry logic
-- Async support for better performance
+- Project, job, execution and node tooling for Rundeck API v41+
+- API-token authentication via the `X-Rundeck-Auth-Token` header
+- Async httpx client with typed exceptions (`AuthenticationError`,
+  `NotFoundError`, `APIError`)
+- Managed client lifecycle via FastMCP `lifespan`
+- Unit tests with mocked httpx (pytest-httpx)
 
 ## Installation
 
@@ -52,18 +47,45 @@ pip install -e .
 
 ## Configuration
 
-Create a `.env` file or set environment variables according to Rundeck API requirements.
+Set the following environment variables (prefix `RUNDECK_`):
 
-## Quick Start
+| Variable | Default | Description |
+| --- | --- | --- |
+| `RUNDECK_BASE_URL` | `http://localhost:4440` | Base URL of the Rundeck server |
+| `RUNDECK_API_TOKEN` | *(empty)* | API token used for authentication |
+| `RUNDECK_API_VERSION` | `41` | Rundeck API version |
+| `RUNDECK_VERIFY_SSL` | `true` | Verify TLS certificates |
+| `RUNDECK_TIMEOUT` | `30` | HTTP timeout (seconds) |
 
-```python
-from rundeck_mcp import RundeckMCPServer
+## Tools
 
-# Initialize the server
-server = RundeckMCPServer()
+- `list_projects`
+- `list_jobs(project)`
+- `get_job(job_id)`
+- `run_job(job_id, options?, node_filter?)`
+- `get_execution(execution_id)`
+- `get_execution_output(execution_id)`
+- `abort_execution(execution_id)`
+- `list_executions(project, status?, max=20)`
+- `list_nodes(project, filter?)`
+- `enable_job_schedule(job_id)` / `disable_job_schedule(job_id)`
+- `enable_job_execution(job_id)` / `disable_job_execution(job_id)`
 
-# Start the server
-server.start()
+## Running the server
+
+```bash
+rundeck-mcp
+```
+
+The server communicates over stdio per the MCP specification.
+
+## Development
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+pytest
 ```
 
 ## License
